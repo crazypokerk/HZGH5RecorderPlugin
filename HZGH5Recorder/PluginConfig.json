@@ -1,0 +1,23 @@
+{
+  "assembly": [
+    "HZGH5Recorder.dll"
+  ],
+  "css": [
+    "Resources/recorder_cell.css"
+  ],
+  "javascript": [
+    "Resources/recorder.mp3.min.js",
+    "Resources/HZGH5RecorderCellType.js",
+    "Resources/HZGH5RecorderCommand.js"
+  ],
+  "serverApiAssembly": [],
+  "image": "Resources/PluginLogo.png",
+  "description": "这是一个活字格插件",
+  "name": "网页录音",
+  "pluginType": "cellType,command",
+  "guid": "a635bd14-b5df-4149-8cb9-13697a4cfb36",
+  "version": "1.0.0.0",
+  "dependenceVersion": "10.0.104.0",
+  "bundleJavaScript": true,
+  "bundleCSS": true
+}

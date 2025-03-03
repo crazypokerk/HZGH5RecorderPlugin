@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "IlLWkUNjEdtlLB/MXjtJe2Ep5H2ejSzJXDW5MeelzcFKDctAfH7X1h5gfl7Lq2YluQcik0Gv2/m/Rgn5Vl5QEg==",
+  "success": true,
+  "projectFilePath": "E:\\ForguncyCustomerService\\PluginDev\\HZGH5Recorder\\HZGH5Recorder\\HZGH5Recorder.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\erikxue.GRAPECITY\\.nuget\\packages\\microsoft.netcore.app.ref\\6.0.36\\microsoft.netcore.app.ref.6.0.36.nupkg.sha512",
+    "C:\\Users\\erikxue.GRAPECITY\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\6.0.36\\microsoft.windowsdesktop.app.ref.6.0.36.nupkg.sha512",
+    "C:\\Users\\erikxue.GRAPECITY\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\6.0.36\\microsoft.aspnetcore.app.ref.6.0.36.nupkg.sha512"
+  ],
+  "logs": []
+}

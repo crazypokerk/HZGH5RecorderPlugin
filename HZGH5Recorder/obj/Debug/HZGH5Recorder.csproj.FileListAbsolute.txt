@@ -1,0 +1,17 @@
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\bin\HZGH5Recorder.deps.json
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\bin\HZGH5Recorder.dll
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\bin\HZGH5Recorder.pdb
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5Recorder.csproj.AssemblyReference.cache
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\Designer\DrawingControl\HZGH5RecorderCellTypeDrawingControl.g.cs
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5Recorder_MarkupCompile.cache
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5Recorder_MarkupCompile.lref
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\Designer\DrawingControl\HZGH5RecorderCellTypeDrawingControl.baml
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5Recorder.g.resources
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5Recorder.GeneratedMSBuildEditorConfig.editorconfig
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5Recorder.AssemblyInfoInputs.cache
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5Recorder.AssemblyInfo.cs
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5Recorder.csproj.CoreCompileInputs.cache
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5Recorder.dll
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\refint\HZGH5Recorder.dll
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5Recorder.pdb
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\ref\HZGH5Recorder.dll
