@@ -18,8 +18,8 @@ class HZGH5RecorderCommand extends Forguncy.Plugin.CommandBase {
             let frobj = new ForguncyRecorder(recordOutputType, sampleRate, bitRate);
             window.frobj = frobj;
         }
-        frobj.OperationRecorder(operation);
-        console.log(`operation down -- ${operation}`);
+        let saveDataInIndexedDBKeyID = frobj.OperationRecorder(operation);
+        Forguncy.CommandHelper.setVariableValue(this.CommandParam.SaveDataInIndexedDBKeyID, saveDataInIndexedDBKeyID);
 
         // if (!forguncyRecorderJson) {
         //     frobj = new ForguncyRecorder(recordOutputType, sampleRate, bitRate);

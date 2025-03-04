@@ -4,6 +4,7 @@
     recordOutputType;
     sampleRate;
     bitRate;
+    processTime;
 
     constructor(recordOutputType, sampleRate, bitRate) {
         this.recordOutputType = recordOutputType;
@@ -16,7 +17,11 @@
             type: this.recordOutputType,
             sampleRate: this.sampleRate,
             bitRate: this.bitRate,
-            onProcess: function () {
+            onProcess: (buffers, powerLevel, bufferDuration, bufferSampleRate, newBufferIdx, asyncEnd) => {
+                //录音实时回调，大约1秒调用12次本回调，buffers为开始到现在的所有录音pcm数据块(16位小端LE)
+                //可利用extensions/sonic.js插件实时变速变调，此插件计算量巨大，onProcess需要返回true开启异步模式
+                //可实时上传（发送）数据，配合Recorder.SampleData方法，将buffers中的新数据连续的转换成pcm上传，或使用mock方法将新数据连续的转码成其他格式上传，可以参考文档里面的：Demo片段列表 -> 实时转码并上传-通用版；基于本功能可以做到：实时转发数据、实时保存数据、实时语音识别（ASR）等
+                this.processTime = Date.now();
             }
         });
         return newRecorder;
@@ -31,6 +36,7 @@
          * Resume 4
          * Stop   5
          */
+        let saveDataInIndexedDBKeyID;
         switch (operationCode) {
             case 0:
                 this.rec = this.#recorderInstance();
@@ -59,19 +65,22 @@
                         clearInterval(wdt);
                         return;
                     } //sync
-                    if (Date.now() < rec.wdtPauseT) return; //如果暂停录音了就不检测：puase时赋值rec.wdtPauseT=Date.now()*2（永不监控），resume时赋值rec.wdtPauseT=Date.now()+1000（1秒后再监控）
-                    if (Date.now() - (processTime || startTime) > 1500) {
+                    if (Date.now() < this.rec.wdtPauseT) return; //如果暂停录音了就不检测：puase时赋值rec.wdtPauseT=Date.now()*2（永不监控），resume时赋值rec.wdtPauseT=Date.now()+1000（1秒后再监控）
+                    if (Date.now() - (this.processTime || startTime) > 1500) {
                         clearInterval(wdt);
-                        console.warn(processTime ? "录音被中断" : "录音未能正常开始");
+                        console.warn(this.processTime ? "录音被中断" : "录音未能正常开始");
                         // ... 错误处理，关闭录音，提醒用户
                         try {
-                            rec.close();
+                            this.rec.close();
                             console.warn("未能正常开始录音，已关闭录音资源");
                         } catch (e) {
                             console.error(e);
                         }
                     }
                 }, 1000);
+                let startTime = Date.now();
+                this.rec.wdtPauseT = 0;
+                this.processTime = 0;
                 break;
             case 3:
                 if (this.rec && Recorder.IsOpen()) {
@@ -98,23 +107,31 @@
                         return;
                     }
                     this.rec.watchDogTimer = 0; //停止监控onProcess超时
-                    this.rec.stop((blob, duration) => {
+                    this.rec.stop((blob, duration, mine) => {
                         console.log(blob, (window.URL || webkitURL).createObjectURL(blob));
-
-                        this.recBlob = blob;
-                        console.info(`INFO: 已录制mp3：${this.#formatMs(duration)}ms, ${blob.size}字节`);
+                        let opdb = new IndexedDBInstance('hzg-rc-1', 1);
+                        opdb.checkFullSupportAndOpenDB()
+                            .then((db) => {
+                                opdb.saveBlob(db, blob, new Date().toString())
+                                    .then(id => {
+                                        saveDataInIndexedDBKeyID = id;
+                                    });
+                            });
+                        console.warn(`INFO: 已录制mp3：${this.#formatMs(duration)}ms, ${blob.size}字节`);
                     }, function (msg) {
                         console.error(`${msg},录音失败`);
-                    });
-                    let opdb = new IndexedDBInstance('hzg-rc-1', 1);
-                    opdb.checkFullSupportAndOpenDB(opdb).then(result => opdb.saveBlob(result, toString(new Date())));
+                    }, true);
+                } catch (e) {
+                    throw new Error('Save data error...')
                 } finally {
+                    // this.rec.close();
                     window.frobj = null;
                 }
                 break;
             default:
                 throw new Error('选择类型错误');
         }
+        return saveDataInIndexedDBKeyID;
     }
 
     #formatMs(ms, all) {

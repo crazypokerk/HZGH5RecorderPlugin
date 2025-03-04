@@ -19,8 +19,14 @@ namespace HZGH5Recorder
         public string OutParameterCode { get; set; }
 
         [OrderWeight(999)]
+        [ResultToProperty]
         [DisplayName("命令执行结果信息保存至变量")]
         public string OutParameterName { get; set; }
+
+        [OrderWeight(1000)]
+        [ResultToProperty]
+        [DisplayName("保存至浏览器数据库数据ID")]
+        public string SaveDataInIndexedDBKeyID { get; set; }
 
         [OrderWeight(1)] [DisplayName("操作")] public SupportedOperations Operation { get; set; }
 
@@ -62,20 +68,22 @@ namespace HZGH5Recorder
 
         public override bool GetDesignerPropertyVisible(string propertyName, CommandScope commandScope)
         {
-            var visibleProperties = new HashSet<string> { "RecordOutputType", "SamepleRate", "BitRate" };
+            var openVisibleProperties = new HashSet<string> { "RecordOutputType", "SampleRate", "BitRate" };
+            var stopVisibleProperties = new HashSet<string> { "SaveDataInIndexedDBKeyID" };
 
-            if (this.Operation == SupportedOperations.Open && visibleProperties.Contains(propertyName))
+            if (this.Operation == SupportedOperations.Open && openVisibleProperties.Contains(propertyName))
             {
                 return true;
             }
 
-            if (visibleProperties.Contains(propertyName))
+            if (this.Operation == SupportedOperations.Stop && stopVisibleProperties.Contains(propertyName))
             {
-                return false;
+                return true;
             }
 
-            // 默认行为，调用基类的方法
-            return base.GetDesignerPropertyVisible(propertyName, commandScope);
+            return !openVisibleProperties.Contains(propertyName) && !stopVisibleProperties.Contains(propertyName) &&
+                   // 默认行为，调用基类的方法
+                   base.GetDesignerPropertyVisible(propertyName, commandScope);
         }
 
         public enum SupportedOperations

@@ -1,6 +1,7 @@
 ﻿class IndexedDBInstance {
     #DBName;
     #DBVersion;
+    #db
 
     constructor(dbName, dbVersion) {
         if (!('indexedDB' in window)) {
@@ -8,12 +9,12 @@
         }
         this.#DBName = dbName;
         this.#DBVersion = dbVersion;
-        this.db = null;
+        this.#db = null;
     }
 
-    async checkFullSupportAndOpenDB(db) {
+    async checkFullSupportAndOpenDB() {
         try {
-            await this.#openDB();
+            return await this.#openDB();
         } catch {
             throw new Error('IndexedDB 功能异常（如隐私模式禁用）');
         }
@@ -24,21 +25,21 @@
             const request = indexedDB.open(this.#DBName, this.#DBVersion);
 
             request.onupgradeneeded = (event) => {
-                this.db = event.target.result;
+                this.#db = event.target.result;
                 // 创建名为 'blobs' 的对象存储空间，keyPath 为自增id
-                if (!this.db.objectStoreNames.contains('blobs')) {
-                    const store = this.db.createObjectStore('blobs', {
+                if (!this.#db.objectStoreNames.contains('blobs')) {
+                    const store = this.#db.createObjectStore('blobs', {
                         keyPath: 'id',
                         autoIncrement: true
                     });
                     // 创建索引（可选，用于按名称查询）
-                    store.createIndex('name', 'name', {unique: false});
+                    store.createIndex('time', 'time', {unique: false});
                 }
             };
 
             request.onsuccess = (event) => {
-                this.db = event.target.result;
-                resolve(this.db);
+                this.#db = event.target.result;
+                resolve(this.#db);
             };
 
             request.onerror = (event) => {
@@ -47,16 +48,16 @@
         });
     }
 
-    async saveBlob(blob, name = '') {
-        if (!this.db || this.db.close) await this.#openDB();
+    async saveBlob(db, blob, time) {
+        if (!this.#db || this.#db.close) await this.#openDB();
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db.transaction(['blobs'], 'readwrite');
+            const transaction = db.transaction(['blobs'], 'readwrite');
             const store = transaction.objectStore('blobs');
 
             const request = store.add({
                 blob,
-                name,
+                time,
                 timestamp: Date.now()
             });
 
@@ -66,10 +67,10 @@
     }
 
     async getBlobById(id) {
-        if (!this.db || this.db.close) await this.#openDB();
+        if (!this.#db || this.#db.close) await this.#openDB();
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db.transaction(['blobs'], 'readonly');
+            const transaction = this.#db.transaction(['blobs'], 'readonly');
             const store = transaction.objectStore('blobs');
 
             const request = store.get(id);
@@ -86,10 +87,10 @@
     }
 
     async deleteBlob(id) {
-        if (!this.db || this.db.close) await this.#openDB();
+        if (!this.#db || this.#db.close) await this.#openDB();
 
         return new Promise((resolve, reject) => {
-            const transaction = this.db.transaction(['blobs'], 'readwrite');
+            const transaction = this.#db.transaction(['blobs'], 'readwrite');
             const store = transaction.objectStore('blobs');
 
             const request = store.delete(id);
@@ -102,7 +103,7 @@
 // 删除7天前的数据
     async cleanupOldBlobs(days = 7) {
         const threshold = Date.now() - days * 86400000;
-        const transaction = this.db.transaction(['blobs'], 'readwrite');
+        const transaction = this.#db.transaction(['blobs'], 'readwrite');
         const store = transaction.objectStore('blobs');
         const request = store.openCursor();
 
