@@ -7,6 +7,8 @@
   ],
   "javascript": [
     "Resources/recorder.mp3.min.js",
+    "Resources/ForguncyRecorder.js",
+    "Resources/OperateIndexedDB.js",
     "Resources/HZGH5RecorderCellType.js",
     "Resources/HZGH5RecorderCommand.js"
   ],

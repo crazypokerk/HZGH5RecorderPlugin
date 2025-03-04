@@ -11,6 +11,7 @@ E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5
 E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5Recorder.AssemblyInfoInputs.cache
 E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5Recorder.AssemblyInfo.cs
 E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5Recorder.csproj.CoreCompileInputs.cache
+E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5Recorder.sourcelink.json
 E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5Recorder.dll
 E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\refint\HZGH5Recorder.dll
 E:\ForguncyCustomerService\PluginDev\HZGH5Recorder\HZGH5Recorder\obj\Debug\HZGH5Recorder.pdb

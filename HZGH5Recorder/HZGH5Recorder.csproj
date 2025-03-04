@@ -52,8 +52,9 @@
         <Analyzer Include="..\PackageTools\PluginAnalyzer.dll"/>
     </ItemGroup>
     <ItemGroup>
-        <Resource Include="Resources\Icon.png"/>
         <None Remove="Resources\Icon.png"/>
+    </ItemGroup>
+    <ItemGroup>
         <Resource Include="Resources\Icon.png"/>
     </ItemGroup>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">

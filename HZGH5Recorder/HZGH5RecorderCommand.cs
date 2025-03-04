@@ -16,11 +16,11 @@ namespace HZGH5Recorder
         [ResultToProperty]
         [DisplayName("命令执行结果返回码保存至变量")]
         [Description("正常执行返回0，执行错误返回1")]
-        public string OutParamaterCode { get; set; }
+        public string OutParameterCode { get; set; }
 
         [OrderWeight(999)]
         [DisplayName("命令执行结果信息保存至变量")]
-        public string OutParamaterName { get; set; }
+        public string OutParameterName { get; set; }
 
         [OrderWeight(1)] [DisplayName("操作")] public SupportedOperations Operation { get; set; }
 
@@ -32,7 +32,7 @@ namespace HZGH5Recorder
         [OrderWeight(3)]
         [IntProperty(Min = 1, Max = 99999)]
         [DisplayName("采样率(hz)")]
-        public int SamepleRate { get; set; }
+        public int SampleRate { get; set; }
 
         [OrderWeight(4)]
         [IntProperty(Min = 1, Max = 999)]
@@ -85,8 +85,7 @@ namespace HZGH5Recorder
             [Description("开始录音")] Start,
             [Description("暂停录音")] Pause,
             [Description("恢复录音")] Resume,
-            [Description("结束录音")] Stop,
-            [Description("播放录音")] Play
+            [Description("结束录音")] Stop
         }
     }
 }

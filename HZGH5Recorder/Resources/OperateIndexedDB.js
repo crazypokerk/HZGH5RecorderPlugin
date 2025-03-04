@@ -1,20 +1,27 @@
 ﻿class IndexedDBInstance {
-    DBName;
-    DBVersion;
+    #DBName;
+    #DBVersion;
 
     constructor(dbName, dbVersion) {
-        if (!window.indexedDB) {
-            console.warn('当前浏览器不支持IndexedDB');
-            // 可降级使用 localStorage（注意有容量限制）
+        if (!('indexedDB' in window)) {
+            throw new Error('当前浏览器不支持 IndexedDB，无法创建存储对象');
         }
-        this.DBName = dbName;
-        this.DBVersion = dbVersion;
+        this.#DBName = dbName;
+        this.#DBVersion = dbVersion;
         this.db = null;
     }
-    
-    async openDB() {
+
+    async checkFullSupportAndOpenDB(db) {
+        try {
+            await this.#openDB();
+        } catch {
+            throw new Error('IndexedDB 功能异常（如隐私模式禁用）');
+        }
+    }
+
+    async #openDB() {
         return new Promise((resolve, reject) => {
-            const request = indexedDB.open(dbName, dbVersion);
+            const request = indexedDB.open(this.#DBName, this.#DBVersion);
 
             request.onupgradeneeded = (event) => {
                 this.db = event.target.result;
@@ -41,7 +48,7 @@
     }
 
     async saveBlob(blob, name = '') {
-        if (!this.db || this.db.close) await this.openDB();
+        if (!this.db || this.db.close) await this.#openDB();
 
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction(['blobs'], 'readwrite');
@@ -59,7 +66,7 @@
     }
 
     async getBlobById(id) {
-        if (!this.db || this.db.close) await this.openDB();
+        if (!this.db || this.db.close) await this.#openDB();
 
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction(['blobs'], 'readonly');
@@ -79,7 +86,7 @@
     }
 
     async deleteBlob(id) {
-        if (!this.db || this.db.close) await this.openDB();
+        if (!this.db || this.db.close) await this.#openDB();
 
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction(['blobs'], 'readwrite');
@@ -110,5 +117,3 @@
         };
     }
 }
-
-export default IndexedDBInstance;
