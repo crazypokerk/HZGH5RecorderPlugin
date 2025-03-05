@@ -1,120 +1,78 @@
 ﻿class IndexedDBInstance {
     #DBName;
     #DBVersion;
-    #db
+    DBStatus;
 
     constructor(dbName, dbVersion) {
-        if (!('indexedDB' in window)) {
-            throw new Error('当前浏览器不支持 IndexedDB，无法创建存储对象');
-        }
         this.#DBName = dbName;
         this.#DBVersion = dbVersion;
-        this.#db = null;
+        this.DBStatus = false;
     }
 
-    async checkFullSupportAndOpenDB() {
+    async initLocalForage() {
+        localforage.config({
+            driver: [localforage.INDEXEDDB],
+            name: this.#DBName,
+            storeName: 'RecordBlobs',
+            version: this.#DBVersion,
+            description: 'For store blobs'
+        });
+        if (!localforage.supports(localforage.INDEXEDDB)) {
+            throw new Error('当前浏览器不支持 IndexedDB，无法创建存储对象');
+        }
+        await localforage.ready().then(() => {
+            // 数据库已经准备好
+            this.DBStatus = true;
+        }).catch(function (err) {
+            throw new Error('IndexedDB初始化异常！');
+        });
+    }
+
+    async setItemInDB(key, blobs) {
+        if (!this.DBStatus) {
+            throw new Error('IndexedDB未初始化！');
+        }
+        let keyID = nanoid(10);
         try {
-            return await this.#openDB();
-        } catch {
-            throw new Error('IndexedDB 功能异常（如隐私模式禁用）');
+            await localforage.setItem(keyID, [Date.now(), blobs]);
+            return keyID;
+        } catch (e) {
+            throw new Error(`IndexedDB [添加]异常:${e}`);
         }
     }
 
-    async #openDB() {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open(this.#DBName, this.#DBVersion);
-
-            request.onupgradeneeded = (event) => {
-                this.#db = event.target.result;
-                // 创建名为 'blobs' 的对象存储空间，keyPath 为自增id
-                if (!this.#db.objectStoreNames.contains('blobs')) {
-                    const store = this.#db.createObjectStore('blobs', {
-                        keyPath: 'id',
-                        autoIncrement: true
-                    });
-                    // 创建索引（可选，用于按名称查询）
-                    store.createIndex('time', 'time', {unique: false});
-                }
-            };
-
-            request.onsuccess = (event) => {
-                this.#db = event.target.result;
-                resolve(this.#db);
-            };
-
-            request.onerror = (event) => {
-                reject('数据库打开失败: ' + event.target.error);
-            };
-        });
+    async getItemFromDB(key, successCallback) {
+        if (!this.DBStatus) {
+            throw new Error('IndexedDB未初始化！');
+        }
+        try {
+            let data = await localforage.getItem(key);
+            successCallback(data);
+        } catch (e) {
+            throw new Error(`IndexedDB [获取]异常:${e}`);
+        }
     }
 
-    async saveBlob(db, blob, time) {
-        if (!this.#db || this.#db.close) await this.#openDB();
-
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction(['blobs'], 'readwrite');
-            const store = transaction.objectStore('blobs');
-
-            const request = store.add({
-                blob,
-                time,
-                timestamp: Date.now()
-            });
-
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = (e) => reject('保存失败: ' + e.target.error);
-        });
+    async removeItemFromDB(key) {
+        if (!this.DBStatus) {
+            throw new Error('IndexedDB未初始化！');
+        }
+        try {
+            await localforage.removeItem(key);
+        } catch (e) {
+            throw new Error(`IndexedDB [删除]异常:${e}`);
+        }
     }
 
-    async getBlobById(id) {
-        if (!this.#db || this.#db.close) await this.#openDB();
+    async clearDB(days) {
+        if (!this.DBStatus) {
+            throw new Error('IndexedDB未初始化！');
+        }
 
-        return new Promise((resolve, reject) => {
-            const transaction = this.#db.transaction(['blobs'], 'readonly');
-            const store = transaction.objectStore('blobs');
-
-            const request = store.get(id);
-
-            request.onsuccess = () => {
-                if (request.result) {
-                    resolve(request.result.blob);
-                } else {
-                    reject('未找到对应数据');
-                }
-            };
-            request.onerror = (e) => reject('读取失败: ' + e.target.error);
-        });
-    }
-
-    async deleteBlob(id) {
-        if (!this.#db || this.#db.close) await this.#openDB();
-
-        return new Promise((resolve, reject) => {
-            const transaction = this.#db.transaction(['blobs'], 'readwrite');
-            const store = transaction.objectStore('blobs');
-
-            const request = store.delete(id);
-
-            request.onsuccess = () => resolve();
-            request.onerror = (e) => reject('删除失败: ' + e.target.error);
-        });
-    }
-
-// 删除7天前的数据
-    async cleanupOldBlobs(days = 7) {
-        const threshold = Date.now() - days * 86400000;
-        const transaction = this.#db.transaction(['blobs'], 'readwrite');
-        const store = transaction.objectStore('blobs');
-        const request = store.openCursor();
-
-        request.onsuccess = (e) => {
-            const cursor = e.target.result;
-            if (cursor) {
-                if (cursor.value.timestamp < threshold) {
-                    cursor.delete();
-                }
-                cursor.continue();
-            }
-        };
+        try {
+            await localforage.clear();
+        } catch (e) {
+            throw new Error(`IndexedDB [清空]异常:${e}`);
+        }
     }
 }

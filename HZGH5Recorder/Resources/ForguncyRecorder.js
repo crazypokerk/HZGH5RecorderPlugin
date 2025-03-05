@@ -27,7 +27,7 @@
         return newRecorder;
     }
 
-    OperationRecorder(operationCode) {
+    async OperationRecorder(operationCode) {
         /**
          * Open   0
          * Close  1
@@ -107,16 +107,18 @@
                         return;
                     }
                     this.rec.watchDogTimer = 0; //停止监控onProcess超时
-                    this.rec.stop((blob, duration, mine) => {
+                    await this.rec.stop(async (blob, duration, mine) => {
                         console.log(blob, (window.URL || webkitURL).createObjectURL(blob));
                         let opdb = new IndexedDBInstance('hzg-rc-1', 1);
-                        opdb.checkFullSupportAndOpenDB()
-                            .then((db) => {
-                                opdb.saveBlob(db, blob, new Date().toString())
-                                    .then(id => {
-                                        saveDataInIndexedDBKeyID = id;
-                                    });
-                            });
+                        await opdb.initLocalForage();
+                        if (!opdb.DBStatus) {
+                            console.error('IndexedDB初始化异常！');
+                        }
+                        let keyId = opdb.setItemInDB('record', blob).then((result) => {
+                            console.log('Save record success!');
+                        });
+                        saveDataInIndexedDBKeyID = keyId;
+                        this.recBlob = blob;
                         console.warn(`INFO: 已录制mp3：${this.#formatMs(duration)}ms, ${blob.size}字节`);
                     }, function (msg) {
                         console.error(`${msg},录音失败`);

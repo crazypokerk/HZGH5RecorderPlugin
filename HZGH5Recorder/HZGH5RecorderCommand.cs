@@ -25,7 +25,7 @@ namespace HZGH5Recorder
 
         [OrderWeight(1000)]
         [ResultToProperty]
-        [DisplayName("保存至浏览器数据库数据ID")]
+        [DisplayName("保存至浏览器数据库数据key")]
         public string SaveDataInIndexedDBKeyID { get; set; }
 
         [OrderWeight(1)] [DisplayName("操作")] public SupportedOperations Operation { get; set; }

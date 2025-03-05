@@ -3,10 +3,12 @@
     "HZGH5Recorder.dll"
   ],
   "css": [
-    "Resources/recorder_cell.css"
+    "Resources/styles/recorder_cell.css"
   ],
   "javascript": [
-    "Resources/recorder.mp3.min.js",
+    "Resources/utils/nanoid.js",
+    "Resources/utils/recorder.mp3.min.js",
+    "Resources/utils/localforage.min.js",
     "Resources/ForguncyRecorder.js",
     "Resources/OperateIndexedDB.js",
     "Resources/HZGH5RecorderCellType.js",
