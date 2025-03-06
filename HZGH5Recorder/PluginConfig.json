@@ -8,7 +8,9 @@
   "javascript": [
     "Resources/utils/nanoid.js",
     "Resources/utils/recorder.mp3.min.js",
+    "Resources/utils/waveview.js",
     "Resources/utils/localforage.min.js",
+    "Resources/WaveViewInstance.js",
     "Resources/ForguncyRecorder.js",
     "Resources/OperateIndexedDB.js",
     "Resources/HZGH5RecorderCellType.js",

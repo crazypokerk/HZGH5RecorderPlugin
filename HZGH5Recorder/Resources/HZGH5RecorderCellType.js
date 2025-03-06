@@ -10,7 +10,7 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
         const isVisibleDownloadButton = this.CellElement.CellType.IsVisibleDownloadButton;
         // 构建 Jquery Dom 并返回
         var $container = $('<div>', {
-            'class': 'recorder_btn_container',
+            'class': 'recorder_container',
             css: {
                 display: 'flex'
             }
@@ -28,6 +28,16 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
             text: downloadButtonName,
         });
 
+        let $waveViewDiv = $('<div>', {
+            'class': 'recorder_wave_view',
+            css: {
+                display: 'flex',
+                flex: '1 100%',
+                width: 180,
+                height: 60
+            }
+        });
+
         if (!isVisiblePlaybutton) {
             $playButton.css("display", "none");
         }
@@ -35,7 +45,8 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
             $downloadButton.css("display", "none");
         }
 
-        $container.append($playButton, $downloadButton);
+
+        $container.append($waveViewDiv, $playButton, $downloadButton);
         return $container;
     }
 }
