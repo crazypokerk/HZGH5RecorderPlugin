@@ -6,10 +6,11 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
         // 获取MyProperty属性值，注意，这里的MyProperty应该与 HZGH5RecorderCellType.cs 文件定义的属性名一致
         const playButtonName = this.evaluateFormula(this.CellElement.CellType.PlayButtonName);
         const isVisiblePlaybutton = this.CellElement.CellType.IsVisiblePlaybutton;
+        const isVisibleWaveView = this.CellElement.CellType.IsVisibleWaveView;
         const downloadButtonName = this.evaluateFormula(this.CellElement.CellType.DownloadButtonName);
         const isVisibleDownloadButton = this.CellElement.CellType.IsVisibleDownloadButton;
         // 构建 Jquery Dom 并返回
-        var $container = $('<div>', {
+        let $container = $('<div>', {
             'class': 'recorder_container',
             css: {
                 display: 'flex'
@@ -45,6 +46,9 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
             $downloadButton.css("display", "none");
         }
 
+        if (!isVisibleWaveView) {
+            $waveViewDiv.css("display", "none");
+        }
 
         $container.append($waveViewDiv, $playButton, $downloadButton);
         return $container;

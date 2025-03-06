@@ -21,10 +21,12 @@ namespace HZGH5Recorder
 
         [Required]
         [FormulaProperty]
-        [DisplayName("下载按钮名称")]
+        [DisplayName("上传按钮名称")]
         public object DownloadButtonName { get; set; } = "上传";
 
         [DisplayName("是否显示下载按钮")] public bool IsVisibleDownloadButton { get; set; } = true;
+
+        [DisplayName("是否显示录音波形图像")] public bool IsVisibleWaveView { get; set; } = false;
 
         public override string ToString()
         {
