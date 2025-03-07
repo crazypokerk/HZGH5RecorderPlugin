@@ -22,7 +22,7 @@
     transition: all 0.3s;
 }
 
-.recorder_btn_container button:after {
+.recorder_container button:after {
     content: "";
     position: absolute;
     z-index: -1;
@@ -31,7 +31,7 @@
     transition: all 0.3s;
 }
 
-.recorder_btn_container button:hover {
+.recorder_container button:hover {
     color: #c2d9f7;
     background: #506b8f;
     border: 2px #506b8f solid;

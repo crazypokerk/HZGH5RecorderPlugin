@@ -11,31 +11,12 @@ class HZGH5RecorderCommand extends Forguncy.Plugin.CommandBase {
         let sampleRate = this.CommandParam.SampleRate;
         let bitRate = this.CommandParam.BitRate;
 
-        // const STORAGE_KEY = 'ForguncyRecorderInstance';
-        // let forguncyRecorderJson = localStorage.getItem(STORAGE_KEY);
-        // let frobj;
         if (!window.frobj) {
             let frobj = new ForguncyRecorder(recordOutputType, sampleRate, bitRate);
             window.frobj = frobj;
         }
         let saveDataInIndexedDBKeyID = frobj.OperationRecorder(operation);
         Forguncy.CommandHelper.setVariableValue(this.CommandParam.SaveDataInIndexedDBKeyID, saveDataInIndexedDBKeyID);
-
-        // if (!forguncyRecorderJson) {
-        //     frobj = new ForguncyRecorder(recordOutputType, sampleRate, bitRate);
-        //     localStorage.setItem(STORAGE_KEY, JSON.stringify(frobj));
-        // } else {
-        //     frobj = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        // }
-        // console.log(typeof frobj);
-        // frobj = new ForguncyRecorder(
-        //     frobj.recordOutputType,
-        //     frobj.sampleRate,
-        //     frobj.bitRate
-        // );
-        //
-        // frobj.OperationRecorder(operation);
-        // console.log(`operation down -- ${operation}`);
     }
 }
 

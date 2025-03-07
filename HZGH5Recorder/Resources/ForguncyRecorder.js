@@ -5,6 +5,7 @@
     sampleRate;
     bitRate;
     waveInstance;
+    isVisibleWaveView;
 
     constructor(recordOutputType, sampleRate, bitRate) {
         this.recordOutputType = recordOutputType;
@@ -37,7 +38,9 @@
         switch (operationCode) {
             case 0:
                 this.rec = this.#recorderInstance();
-                this.waveInstance = new WaveViewInstance(180, 60);
+                if (this.isVisibleWaveView) {
+                    this.waveInstance = new WaveViewInstance(180, 60);
+                }
                 this.rec.open(() => {
                     console.info(`INFO: 已打开录音，可以点击录制开始录音了`);
                 }, function (msg, isUserNotAllow) {
@@ -47,6 +50,8 @@
             case 1:
                 if (this.rec) {
                     this.rec.close();
+                    // 当关闭录音后，需要释放资源，清除挂在window对象上的frobj对象
+                    window.frobj = null;
                     console.info(`INFO: 已关闭录音，释放资源`);
                 } else {
                     console.warn(`WARN: 未打开录音权限，请先打开录音权限`);
@@ -62,7 +67,6 @@
             case 3:
                 if (this.rec && Recorder.IsOpen()) {
                     this.rec.pause();
-                    this.rec.wdtPauseT = Date.now() * 2; //永不监控onProcess超时
                     console.info(`INFO: 录音已暂停`);
                 } else {
                     console.info(`INFO: 未打开录音`);
@@ -71,7 +75,6 @@
             case 4:
                 if (this.rec && Recorder.IsOpen()) {
                     this.rec.resume();
-                    this.rec.wdtPauseT = Date.now() + 1000; //1秒后再监控onProcess超时
                     console.info(`INFO: 继续录音中...`);
                 } else {
                     console.info(`INFO: 未打开录音`);
@@ -102,9 +105,6 @@
                     }, true);
                 } catch (e) {
                     throw new Error('Save data error...')
-                } finally {
-                    // this.rec.close();
-                    window.frobj = null;
                 }
                 break;
             default:
