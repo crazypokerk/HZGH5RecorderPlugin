@@ -13,9 +13,7 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
         const isVisibleDownloadButton = this.CellElement.CellType.IsVisibleDownloadButton;
 
         // 目的是为了存入waveview是否显示，如果不显示，则命令插件在open时不会创建waveview
-        if (window.frobj != null) {
-            window.frobj.isVisibleWaveView = isVisibleWaveView;
-        }
+        localStorage.setItem("isVisibleWaveView", isVisibleWaveView);
 
         // 构建 Jquery Dom 并返回
         let $container = $('<div>', {

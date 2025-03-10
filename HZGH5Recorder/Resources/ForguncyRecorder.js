@@ -7,10 +7,11 @@
     waveInstance;
     isVisibleWaveView;
 
-    constructor(recordOutputType, sampleRate, bitRate) {
+    constructor(recordOutputType, sampleRate, bitRate, isVisibleWaveView) {
         this.recordOutputType = recordOutputType;
         this.sampleRate = sampleRate;
         this.bitRate = bitRate;
+        this.isVisibleWaveView = isVisibleWaveView;
     }
 
     #recorderInstance() {
@@ -25,6 +26,7 @@
 
         return newRecorder;
     }
+
     async OperationRecorder(operationCode) {
         /**
          * Open   0
