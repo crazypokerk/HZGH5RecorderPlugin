@@ -6,6 +6,9 @@
     "Resources/styles/recorder_cell.css"
   ],
   "javascript": [
+    "Resources/utils/hmac-sha256.js",
+    "Resources/utils/crypto-js.js",
+    "Resources/IATwsInstance.js",
     "Resources/utils/nanoid.js",
     "Resources/utils/recorder.mp3.min.js",
     "Resources/utils/waveview.js",
@@ -16,7 +19,9 @@
     "Resources/HZGH5RecorderCellType.js",
     "Resources/HZGH5RecorderCommand.js"
   ],
-  "serverApiAssembly": [],
+  "serverApiAssembly": [
+    "HZGH5RecorderApi.Server.dll"
+  ],
   "image": "Resources/PluginLogo.png",
   "description": "这是一个活字格插件",
   "name": "网页录音",

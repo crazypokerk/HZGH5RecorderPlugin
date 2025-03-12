@@ -5,6 +5,8 @@ VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HZGH5Recorder", "HZGH5Recorder\HZGH5Recorder.csproj", "{7BC33FE5-3747-43EC-BE7A-02FC2B47F9B7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HZGH5Recorder.Server", "HZGH5Recorder.Server\HZGH5Recorder.Server.csproj", "{35E4CE87-1872-4C49-B576-09B33D857BA3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{7BC33FE5-3747-43EC-BE7A-02FC2B47F9B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7BC33FE5-3747-43EC-BE7A-02FC2B47F9B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7BC33FE5-3747-43EC-BE7A-02FC2B47F9B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35E4CE87-1872-4C49-B576-09B33D857BA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35E4CE87-1872-4C49-B576-09B33D857BA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35E4CE87-1872-4C49-B576-09B33D857BA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35E4CE87-1872-4C49-B576-09B33D857BA3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

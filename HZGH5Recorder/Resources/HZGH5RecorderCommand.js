@@ -13,7 +13,7 @@ class HZGH5RecorderCommand extends Forguncy.Plugin.CommandBase {
 
         if (!window.frobj) {
             let isVisibleWaveView = localStorage.getItem("isVisibleWaveView") != null;
-            let frobj = new ForguncyRecorder(recordOutputType, sampleRate, bitRate, isVisibleWaveView);
+            let frobj = new ForguncyRecorder(recordOutputType, sampleRate, bitRate, isVisibleWaveView, 1280);
             window.frobj = frobj;
         }
         let saveDataInIndexedDBKeyID = frobj.OperationRecorder(operation);

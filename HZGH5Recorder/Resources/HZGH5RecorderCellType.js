@@ -171,16 +171,16 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
     }
 
     #uploadFile(uploadButtonUrl) {
-        let form = new FormData();
-        form.append('mine', window.frobj.recBlob.type, `recorder_${this.#formatTimestamp(Date.now())}.mp3`);
-
+        let formData = new FormData();
+        formData.append('file', window.frobj.recBlob, `recorder_${this.#formatTimestamp(Date.now())}.mp3`);
+        
         if (window.frobj == null) {
             throw new Error("未初始化录音");
         }
         $.ajax({
             url: uploadButtonUrl,
             type: 'POST',
-            data: form,
+            data: formData,
             contentType: false,
             processData: false,
             success: function (v) {
