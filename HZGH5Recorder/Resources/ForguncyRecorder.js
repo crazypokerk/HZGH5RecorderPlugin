@@ -67,19 +67,29 @@
                 if (this.isVisibleWaveView) {
                     this.waveInstance = new WaveViewInstance(180, 60);
                 }
-                this.rec.open(() => {
-                    console.info(`INFO: 已打开录音，可以点击录制开始录音了`);
-                }, function (msg, isUserNotAllow) {
-                    console.error(`(${isUserNotAllow} ? "UserNotAllow," : "") 用户拒绝打开录音权限，打开录音失败,${msg}`);
+                new Promise((resolve, reject) => {
+                    this.rec.open(() => {
+                        console.info(`INFO: 已打开录音，可以点击录制开始录音了`);
+                        resolve();
+                    }, function (msg, isUserNotAllow) {
+                        console.error(`(${isUserNotAllow} ? "UserNotAllow," : "") 用户拒绝打开录音权限，打开录音失败,${msg}`);
+                        reject();
+                    });
+                }).then(() => {
+                    return new Promise((resolve, reject) => {
+                        this.rec.start();
+                        resolve();
+                    });
+                }).then(() => {
+                    this.#realTimeSendReset();
+                    // 开启ws连接
+                    try {
+                        this.iatWSObj.connectWebSocket();
+                    } catch (e) {
+                        console.error('WebSocket连接异常！');
+                        throw new Error('WebSocket连接异常！');
+                    }
                 });
-                this.#realTimeSendReset();
-                // 开启ws连接
-                try {
-                    this.iatWSObj.connectWebSocket();
-                } catch (e) {
-                    console.error('WebSocket连接异常！');
-                    throw new Error('WebSocket连接异常！');
-                }
                 break;
             // close
             case 1:
@@ -131,7 +141,8 @@
                         return;
                     }
                     this.rec.watchDogTimer = 0; //停止监控onProcess超时
-                    await this.rec.stop(async (blob, duration, mine) => {
+                    localStorage.setItem('resultTextTemp', this.iatWSObj.resultTextTemp);
+                    this.rec.stop(async (blob, duration, mine) => {
                         console.log(blob, (window.URL || webkitURL).createObjectURL(blob));
                         let opdb = new IndexedDBInstance('hzg-rc-1', 1);
                         await opdb.initLocalForage();
