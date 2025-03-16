@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HZGH5Recorder")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+99507df4a48cb4b7d0806f175387c728c3367ab1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8ceeebf2eb684766922cdaa9e7a3cdc950a0f6f0")]
 [assembly: System.Reflection.AssemblyProductAttribute("HZGH5Recorder")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HZGH5Recorder")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

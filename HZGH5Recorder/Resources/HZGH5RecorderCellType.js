@@ -77,8 +77,8 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
             css: {
                 display: 'flex',
                 flex: '1 100%',
-                width: 180,
-                height: 60
+                width: 'inherit',
+                height: 'inherit'
             }
         });
 
