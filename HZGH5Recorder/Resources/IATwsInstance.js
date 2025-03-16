@@ -114,7 +114,6 @@ class IATwsInstance {
         };
         this.iatWS.onclose = (e) => {
             this.changeStatus("CLOSED");
-            throw new Error("WebSocket连接关闭");
         };
     }
 

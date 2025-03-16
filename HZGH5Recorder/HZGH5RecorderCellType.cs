@@ -61,6 +61,11 @@ namespace HZGH5Recorder
         [DefaultValue(false)]
         public bool IsVisibleWaveView { get; set; } = false;
 
+        [OrderWeight(500)]
+        [DisplayName("是否启用测试语言识别模式")]
+        [DefaultValue(false)]
+        public bool IsOpenRealtimeIAT { get; set; } = false;
+
         public override string ToString()
         {
             return "网页录音操作";

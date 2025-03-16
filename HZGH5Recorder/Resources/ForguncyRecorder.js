@@ -13,40 +13,43 @@
     send_lastFrame = null;
     send_logNumber = 0;
     iatWSObj;
+    isOpenRealtimeIAT;
 
-    constructor(recordOutputType, sampleRate, bitRate, isVisibleWaveView, sendFrameSize = 0) {
+    constructor(recordOutputType, sampleRate, bitRate, isVisibleWaveView, sendFrameSize = 0, isOpenRealtimeIAT = false) {
         this.recordOutputType = recordOutputType;
         this.sampleRate = sampleRate;
         this.bitRate = bitRate;
         this.isVisibleWaveView = isVisibleWaveView;
         this.sendFrameSize = sendFrameSize;
+        this.isOpenRealtimeIAT = isOpenRealtimeIAT;
     }
 
-    #recorderInstance() {
+    #recorderInstance(type) {
         if (this.bitRate !== 16 && this.sendFrameSize % 2 === 1) {
             throw new Error('sendFrameSize必须为偶数！');
         }
         let clearBufferIdx = 0;
         let newRecorder = Recorder({
-            type: "unknown",
+            type: type,
             sampleRate: this.sampleRate,
             bitRate: this.bitRate,
             sendFrameSize: this.sendFrameSize,
             onProcess: (buffers, powerLevel, bufferDuration, bufferSampleRate, newBufferIdx, asyncEnd) => {
                 this.waveInstance && this.waveInstance.input(buffers[buffers.length - 1], powerLevel, bufferSampleRate);
-                for (let i = clearBufferIdx; i < newBufferIdx; i++) {
-                    buffers[i] = null;
+                if (this.isOpenRealtimeIAT) {
+                    for (let i = clearBufferIdx; i < newBufferIdx; i++) {
+                        buffers[i] = null;
+                    }
+                    clearBufferIdx = newBufferIdx;
+                    this.realTimeSendTry(buffers, bufferSampleRate, false);
                 }
-                clearBufferIdx = newBufferIdx;
-                this.realTimeSendTry(buffers, bufferSampleRate, false);
             }
         });
         if (window.location.hostname !== 'localhost') {
             newRecorder.CLog = function () {
             }
         }
-        // 创建好录音对象同时，初始化iatWS对象
-        this.iatWSObj = new IATwsInstance('7300d69c', '7f006057e1511f8b8f0b5ec3598c0aee', 'Y2ViMTAzNmI4YjIzMDA4MzVjMjBmYzFl');
+
         return newRecorder;
     }
 
@@ -63,32 +66,15 @@
         switch (operationCode) {
             // open
             case 0:
-                this.rec = this.#recorderInstance();
+                this.rec = this.#recorderInstance(this.recordOutputType);
                 if (this.isVisibleWaveView) {
                     this.waveInstance = new WaveViewInstance(180, 60);
                 }
-                new Promise((resolve, reject) => {
-                    this.rec.open(() => {
-                        console.info(`INFO: 已打开录音，可以点击录制开始录音了`);
-                        resolve();
-                    }, function (msg, isUserNotAllow) {
-                        console.error(`(${isUserNotAllow} ? "UserNotAllow," : "") 用户拒绝打开录音权限，打开录音失败,${msg}`);
-                        reject();
-                    });
-                }).then(() => {
-                    return new Promise((resolve, reject) => {
-                        this.rec.start();
-                        resolve();
-                    });
-                }).then(() => {
-                    this.#realTimeSendReset();
-                    // 开启ws连接
-                    try {
-                        this.iatWSObj.connectWebSocket();
-                    } catch (e) {
-                        console.error('WebSocket连接异常！');
-                        throw new Error('WebSocket连接异常！');
-                    }
+                this.rec.open(() => {
+                    console.info(`INFO: 已打开录音，可以点击录制开始录音了`);
+
+                }, function (msg, isUserNotAllow) {
+                    console.error(`(${isUserNotAllow} ? "UserNotAllow," : "") 用户拒绝打开录音权限，打开录音失败,${msg}`);
                 });
                 break;
             // close
@@ -106,11 +92,6 @@
             case 2:
                 if (this.rec && Recorder.IsOpen()) {
                     this.recBlob = null;
-                    if (this.iatWSObj.checkStatus() !== 'OPEN') {
-                        this.rec.close();
-                        this.iatWSObj.clearCountdown();
-                        break;
-                    }
                     this.rec.start();
                     console.info(`INFO: 已开始录音，正在录音中...`);
                 }
@@ -140,8 +121,6 @@
                         console.info(`INFO: 未打开录音`);
                         return;
                     }
-                    this.rec.watchDogTimer = 0; //停止监控onProcess超时
-                    localStorage.setItem('resultTextTemp', this.iatWSObj.resultTextTemp);
                     this.rec.stop(async (blob, duration, mine) => {
                         console.log(blob, (window.URL || webkitURL).createObjectURL(blob));
                         let opdb = new IndexedDBInstance('hzg-rc-1', 1);
@@ -155,10 +134,6 @@
                         saveDataInIndexedDBKeyID = keyId;
                         this.recBlob = blob;
                         console.warn(`INFO: 已录制mp3：${this.#formatMs(duration)}ms, ${blob.size}字节`);
-
-                        this.realTimeSendTry([], 0, true);
-                        // 关闭ws定时器
-                        this.iatWSObj.clearCountdown();
                     }, function (msg) {
                         console.error(`${msg},录音失败`);
                     }, true);
@@ -170,6 +145,64 @@
                 throw new Error('选择类型错误');
         }
         return saveDataInIndexedDBKeyID;
+    }
+
+    // 测试用，前端实时语音识别
+    startRealTimeRecord() {
+        this.rec = this.#recorderInstance(this.recordOutputType);
+        // 创建好录音对象同时，初始化iatWS对象
+        this.iatWSObj = new IATwsInstance('7300d69c', '7f006057e1511f8b8f0b5ec3598c0aee', 'Y2ViMTAzNmI4YjIzMDA4MzVjMjBmYzFl');
+        if (this.isVisibleWaveView) {
+            this.waveInstance = new WaveViewInstance(180, 60);
+        }
+        new Promise((resolve, reject) => {
+            this.rec.open(() => {
+                console.info(`INFO: 已打开录音，可以点击录制开始录音了`);
+                resolve();
+            }, function (msg, isUserNotAllow) {
+                console.error(`(${isUserNotAllow} ? "UserNotAllow," : "") 用户拒绝打开录音权限，打开录音失败,${msg}`);
+                reject();
+            });
+        }).then(() => {
+            return new Promise((resolve, reject) => {
+                this.rec.start();
+                resolve();
+            });
+        }).then(() => {
+            this.#realTimeSendReset();
+            // 开启ws连接
+            try {
+                this.iatWSObj.connectWebSocket();
+            } catch (e) {
+                console.error('WebSocket连接异常！');
+                throw new Error('WebSocket连接异常！');
+            }
+        });
+    }
+
+    stopRealTimeRecord() {
+        try {
+            if (!(this.rec && Recorder.IsOpen())) {
+                console.info(`INFO: 未打开录音`);
+                return;
+            }
+            localStorage.setItem('resultTextTemp', this.iatWSObj.resultTextTemp);
+            this.rec.stop(async (blob, duration, mine) => {
+                // 关闭ws定时器
+                this.iatWSObj.clearCountdown();
+                console.log(blob, (window.URL || webkitURL).createObjectURL(blob));
+                this.recBlob = blob;
+                console.warn(`INFO: 已录制mp3：${this.#formatMs(duration)}ms, ${blob.size}字节`);
+                this.realTimeSendTry([], 0, true);
+            }, function (msg) {
+                console.error(`${msg},录音失败`);
+            }, true);
+        } catch (e) {
+            throw new Error('Save data error...')
+        } finally {
+            window.frobj = null;
+            this.iatWSObj.iatWS.close();
+        }
     }
 
     // 实时处理核心函数
@@ -191,7 +224,6 @@
             return;
         }
 
-        console.log(1)
         //先将数据写入缓冲，再按固定大小切分后发送 【不建议使用固定的帧大小】
         let pcmBuffer = this.send_pcmBuffer;
         let tmp = new Int16Array(pcmBuffer.length + pcm.length);
@@ -201,7 +233,6 @@
 
         let chunkSize = this.sendFrameSize / (this.bitRate / 8);
         while (true) {
-            console.log(2)
             //切分出固定长度的一帧数据（注：包含若干个音频帧，首尾不一定刚好是完整的音频帧）
             if (pcmBuffer.length >= chunkSize) {
                 let frame = new Int16Array(pcmBuffer.subarray(0, chunkSize));

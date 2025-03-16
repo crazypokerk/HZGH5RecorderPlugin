@@ -12,6 +12,8 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
         const downloadButtonName = this.evaluateFormula(this.CellElement.CellType.DownloadButtonName);
         const isVisibleDownloadButton = this.CellElement.CellType.IsVisibleDownloadButton;
 
+        const isOpenRealtimeIAT = this.CellElement.CellType.IsOpenRealtimeIAT;
+
         // 目的是为了存入waveview是否显示，如果不显示，则命令插件在open时不会创建waveview
         localStorage.setItem("isVisibleWaveView", isVisibleWaveView);
 
@@ -72,13 +74,52 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
             this.#recordLocalDownload(window.uploadType, window.uploadUrl);
         })
 
+        let $actionButton = $('<button>', {
+            'class': 'recorder_action_btn',
+            text: "按住说话",
+            type: 'button'
+        });
+        if (isOpenRealtimeIAT) {
+            let frobj = new ForguncyRecorder("unknown", 16000, 16, true, 1280, true);
+            window.frobj = frobj;
+
+            if (this.#getDeviceType() === 'mobile') {
+                $actionButton.on("touchstart", (e) => {
+                    if (window.frobj == null) {
+                        throw new Error("未初始化录音");
+                    }
+                    e.preventDefault();// 阻止默认滚动行为
+                    this.startAction();
+                });
+                $actionButton.on("touchend", (e) => {
+                    this.stopAction();
+                });
+                $actionButton.on("touchcancel", (e) => {
+                    this.stopAction();
+                })
+            } else if (this.#getDeviceType() === 'desktop') {
+                $actionButton.on("mousedown", () => {
+                    if (window.frobj == null) {
+                        throw new Error("未初始化录音");
+                    }
+                    this.startAction();
+                    $actionButton.text("松开停止");
+                });
+                $actionButton.on("mouseup", () => {
+                    this.stopAction();
+                    $actionButton.text("按住说话");
+                })
+            }
+        }
+        // 测试实时语音识别，按住录音按钮，松开后停止
+
         let $waveViewDiv = $('<div>', {
             'class': 'recorder_wave_view',
             css: {
                 display: 'flex',
                 flex: '1 100%',
                 width: 'inherit',
-                height: 'inherit'
+                height: '75%'
             }
         });
 
@@ -96,8 +137,25 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
             $waveViewDiv.css("display", "none");
         }
 
-        $container.append($waveViewDiv, $playButton, $uploadButtonName, $downloadButton);
+        if (!isOpenRealtimeIAT) {
+            $actionButton.css("display", "none");
+        }
+
+        $container.append($waveViewDiv, $playButton, $uploadButtonName, $downloadButton, $actionButton);
         return $container;
+    }
+
+    startAction(intervalId) {
+        console.log('开始执行');
+        console.log('正在执行...');
+        window.frobj.startRealTimeRecord();
+    }
+
+    stopAction(intervalId) {
+        window.frobj.stopRealTimeRecord();
+        // let text = localStorage.getItem('resultTextTemp');
+        // Forguncy.CommandHelper.setVariableValue('result', text);
+        console.log('已停止');
     }
 
     onPageLoaded() {
@@ -105,6 +163,23 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
         const uploadType = this.CellElement.CellType.UploadType;
         window.uploadUrl = uploadUrl;
         window.uploadType = uploadType;
+    }
+
+    #getDeviceType() {
+        // 现代浏览器优先使用UA Client Hints API
+        if (navigator.userAgentData) {
+            const {mobile, platform} = navigator.userAgentData
+            return mobile ? 'mobile' : (platform.includes('Mac') ? 'desktop' : 'desktop')
+        }
+
+        // 传统浏览器降级方案
+        const ua = navigator.userAgent
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+        const isTablet = /(iPad|Android|Kindle Fire)/i.test(ua);
+
+        if (isMobile && !isTablet) return 'mobile';
+        if (isTablet) return 'tablet';
+        return 'desktop';
     }
 
     #recordUpload(uploadType, uploadUrl) {
@@ -173,7 +248,7 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
     #uploadFile(uploadButtonUrl) {
         let formData = new FormData();
         formData.append('file', window.frobj.recBlob, `recorder_${this.#formatTimestamp(Date.now())}.mp3`);
-        
+
         if (window.frobj == null) {
             throw new Error("未初始化录音");
         }
