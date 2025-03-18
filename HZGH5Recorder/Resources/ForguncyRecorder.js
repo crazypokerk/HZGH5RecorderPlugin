@@ -149,6 +149,9 @@
 
     // 测试用，前端实时语音识别
     startRealTimeRecord() {
+        if (window.frobj != null) {
+            window.frobj.rec = null;
+        }
         this.rec = this.#recorderInstance(this.recordOutputType);
         // 创建好录音对象同时，初始化iatWS对象
         this.iatWSObj = new IATwsInstance('7300d69c', '7f006057e1511f8b8f0b5ec3598c0aee', 'Y2ViMTAzNmI4YjIzMDA4MzVjMjBmYzFl');
@@ -195,7 +198,7 @@
                 console.warn(`INFO: 已录制mp3：${this.#formatMs(duration)}ms, ${blob.size}字节`);
                 this.realTimeSendTry([], 0, true);
             }, function (msg) {
-                console.error(`${msg},录音失败`);
+                console.info(`${msg} Real time record stop`);
             }, true);
         } catch (e) {
             throw new Error('Save data error...')

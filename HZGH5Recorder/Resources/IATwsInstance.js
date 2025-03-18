@@ -136,7 +136,7 @@ class IATwsInstance {
                 }
                 // 将结果存储在resultTextTemp中
                 this.resultTextTemp = this.resultText + str;
-                let textarea = document.querySelector('.ant-input.css-bvvyl3.ant-input-borderless.ant-sender-input');
+                let textarea = document.querySelector('.ai_input input');
                 textarea.value = this.resultTextTemp;
                 console.warn(`resultTextTemp------${this.resultTextTemp}`)
             } else {

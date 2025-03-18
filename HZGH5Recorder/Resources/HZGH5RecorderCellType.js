@@ -20,9 +20,6 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
         // 构建 Jquery Dom 并返回
         let $container = $('<div>', {
             'class': 'recorder_container',
-            css: {
-                display: 'flex'
-            }
         });
 
         // 创建播放按钮，并赋予相应的class和文本
@@ -76,38 +73,40 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
 
         let $actionButton = $('<button>', {
             'class': 'recorder_action_btn',
-            text: "按住说话",
-            type: 'button'
+            text: 'Press',
+            type: 'Release'
         });
         if (isOpenRealtimeIAT) {
-            let frobj = new ForguncyRecorder("unknown", 16000, 16, true, 1280, true);
-            window.frobj = frobj;
+            this.#createForguncyRecorderInstance();
 
             if (this.#getDeviceType() === 'mobile') {
                 $actionButton.on("touchstart", (e) => {
                     if (window.frobj == null) {
-                        throw new Error("未初始化录音");
+                        this.#createForguncyRecorderInstance();
                     }
                     e.preventDefault();// 阻止默认滚动行为
                     this.startAction();
+                    $actionButton.text("Release");
                 });
                 $actionButton.on("touchend", (e) => {
                     this.stopAction();
+                    $actionButton.text("Press");
                 });
                 $actionButton.on("touchcancel", (e) => {
                     this.stopAction();
+                    $actionButton.text("Press");
                 })
             } else if (this.#getDeviceType() === 'desktop') {
                 $actionButton.on("mousedown", () => {
                     if (window.frobj == null) {
-                        throw new Error("未初始化录音");
+                        this.#createForguncyRecorderInstance();
                     }
                     this.startAction();
-                    $actionButton.text("松开停止");
+                    $actionButton.text("Release");
                 });
                 $actionButton.on("mouseup", () => {
                     this.stopAction();
-                    $actionButton.text("按住说话");
+                    $actionButton.text("Press");
                 })
             }
         }
@@ -116,10 +115,8 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
         let $waveViewDiv = $('<div>', {
             'class': 'recorder_wave_view',
             css: {
-                display: 'flex',
-                flex: '1 100%',
                 width: 'inherit',
-                height: '75%'
+                height: '68%'
             }
         });
 
@@ -145,16 +142,21 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
         return $container;
     }
 
-    startAction(intervalId) {
+    #createForguncyRecorderInstance() {
+        let frobj = new ForguncyRecorder("unknown", 16000, 16, true, 1280, true);
+        window.frobj = frobj;
+    }
+
+    startAction() {
         console.log('开始执行');
         console.log('正在执行...');
         window.frobj.startRealTimeRecord();
     }
 
-    stopAction(intervalId) {
+    stopAction() {
         window.frobj.stopRealTimeRecord();
-        // let text = localStorage.getItem('resultTextTemp');
-        // Forguncy.CommandHelper.setVariableValue('result', text);
+        let cellVal = parseInt(Forguncy.Page.getCell('trigger').getValue());
+        Forguncy.Page.getCell('trigger').setValue(cellVal + 1);
         console.log('已停止');
     }
 

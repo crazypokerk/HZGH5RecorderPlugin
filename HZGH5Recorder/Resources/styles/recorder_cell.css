@@ -4,19 +4,22 @@
     width: 100%;
     height: 100%;
     text-align: center;
-    justify-content: center;
+    justify-content: flex-end;
     align-items: center;
-    gap: 10px;
+    gap: 2%;
 }
 
 .recorder_container button {
     outline: none;
-    height: 25px;
+    height: 30%;
     text-align: center;
-    width: 75px;
-    border-radius: 3px;
+    width: 25%;
+    border-radius: 8px;
     background: none;
-    border: 2px solid;
+    margin-right: 2px;
+    border: 1px solid #e4e0da;
+    background: #fcfaf6;
+    font-weight: 400;
     letter-spacing: 1px;
     text-shadow: none;
     transition: all 0.3s;
@@ -32,10 +35,8 @@
 }
 
 .recorder_container button:hover {
-    color: #c2d9f7;
-    background: #506b8f;
-    border: 2px #506b8f solid;
-    text-shadow: 0 0 21px #4170b3;
+    color: #262626;
+    background: #dedede;
     cursor: pointer;
 }
 
