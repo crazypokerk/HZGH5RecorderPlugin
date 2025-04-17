@@ -59,7 +59,7 @@ class IATwsInstance {
             this.resultTextTemp = "";
             console.log("------WebSocket正在连接------")
         } else if (status === "OPEN") {
-            this.#countdown();
+            // this.#countdown();
             console.log("------WebSocket连接成功------")
         } else if (status === "CLOSING") {
             console.log("------WebSocket正在关闭------")
@@ -90,10 +90,10 @@ class IATwsInstance {
                     app_id: this.APPID,
                 },
                 business: {
-                    language: "zh_cn",
+                    language: "en_us",
                     domain: "iat",
                     accent: "mandarin",
-                    vad_eos: 5000,
+                    vad_eos: 10000,
                     dwa: "wpgs",
                 },
                 data: {
@@ -117,6 +117,23 @@ class IATwsInstance {
         };
     }
 
+    #getDeviceType() {
+        // 现代浏览器优先使用UA Client Hints API
+        if (navigator.userAgentData) {
+            const {mobile, platform} = navigator.userAgentData
+            return mobile ? 'mobile' : (platform.includes('Mac') ? 'desktop' : 'desktop')
+        }
+
+        // 传统浏览器降级方案
+        const ua = navigator.userAgent
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+        const isTablet = /(iPad|Android|Kindle Fire)/i.test(ua);
+
+        if (isMobile && !isTablet) return 'mobile';
+        if (isTablet) return 'tablet';
+        return 'desktop';
+    }
+
     renderResult(resultData) {
         // 识别结束
         let jsonData = JSON.parse(resultData);
@@ -136,7 +153,12 @@ class IATwsInstance {
                 }
                 // 将结果存储在resultTextTemp中
                 this.resultTextTemp = this.resultText + str;
-                let textarea = document.querySelector('.ai_input input');
+                let textarea = null;
+                if (this.#getDeviceType() === 'mobile') {
+                    textarea = document.querySelector('.ai_input input');
+                } else {
+                    textarea = document.querySelector('.ant-sender-input');
+                }
                 textarea.value = this.resultTextTemp;
                 console.warn(`resultTextTemp------${this.resultTextTemp}`)
             } else {

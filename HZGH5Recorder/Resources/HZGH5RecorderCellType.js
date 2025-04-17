@@ -72,43 +72,51 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
         })
 
         let $actionButton = $('<button>', {
-            'class': 'recorder_action_btn',
-            text: 'Press',
-            type: 'Release'
+            'id': 'recorder_action_btn',
+            text: '开始',
+            type: 'button'
         });
         if (isOpenRealtimeIAT) {
             this.#createForguncyRecorderInstance();
-
-            if (this.#getDeviceType() === 'mobile') {
-                $actionButton.on("touchstart", (e) => {
+            $actionButton.on("click", (e) => {
+                if ($actionButton.text() === '开始') {
                     if (window.frobj == null) {
                         this.#createForguncyRecorderInstance();
                     }
                     e.preventDefault();// 阻止默认滚动行为
                     this.startAction();
-                    $actionButton.text("Release");
-                });
-                $actionButton.on("touchend", (e) => {
+                    $actionButton.text("结束");
+                    $actionButton.toggleClass('clicked');
+                } else if ($actionButton.text() === '结束') {
+                    $actionButton.text("开始");
+                    $actionButton.toggleClass('clicked');
                     this.stopAction();
-                    $actionButton.text("Press");
-                });
-                $actionButton.on("touchcancel", (e) => {
-                    this.stopAction();
-                    $actionButton.text("Press");
-                })
-            } else if (this.#getDeviceType() === 'desktop') {
-                $actionButton.on("mousedown", () => {
-                    if (window.frobj == null) {
-                        this.#createForguncyRecorderInstance();
-                    }
-                    this.startAction();
-                    $actionButton.text("Release");
-                });
-                $actionButton.on("mouseup", () => {
-                    this.stopAction();
-                    $actionButton.text("Press");
-                })
-            }
+                }
+            });
+
+            // if (this.#getDeviceType() === 'mobile') {
+
+            // $actionButton.on("touchend", (e) => {
+            //     this.stopAction();
+            //     $actionButton.text("Press");
+            // });
+            // $actionButton.on("touchcancel", (e) => {
+            //     this.stopAction();
+            //     $actionButton.text("Press");
+            // })
+            // } else if (this.#getDeviceType() === 'desktop') {
+            //     $actionButton.on("mousedown", () => {
+            //         if (window.frobj == null) {
+            //             this.#createForguncyRecorderInstance();
+            //         }
+            //         this.startAction();
+            //         $actionButton.text("Release");
+            //     });
+            //     $actionButton.on("mouseup", () => {
+            //         this.stopAction();
+            //         $actionButton.text("Press");
+            //     })
+            // }
         }
         // 测试实时语音识别，按住录音按钮，松开后停止
 
@@ -116,7 +124,7 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
             'class': 'recorder_wave_view',
             css: {
                 width: 'inherit',
-                height: '68%'
+                height: '65%'
             }
         });
 
@@ -166,24 +174,7 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
         window.uploadUrl = uploadUrl;
         window.uploadType = uploadType;
     }
-
-    #getDeviceType() {
-        // 现代浏览器优先使用UA Client Hints API
-        if (navigator.userAgentData) {
-            const {mobile, platform} = navigator.userAgentData
-            return mobile ? 'mobile' : (platform.includes('Mac') ? 'desktop' : 'desktop')
-        }
-
-        // 传统浏览器降级方案
-        const ua = navigator.userAgent
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-        const isTablet = /(iPad|Android|Kindle Fire)/i.test(ua);
-
-        if (isMobile && !isTablet) return 'mobile';
-        if (isTablet) return 'tablet';
-        return 'desktop';
-    }
-
+    
     #recordUpload(uploadType, uploadUrl) {
         switch (uploadType) {
             case "Base64":

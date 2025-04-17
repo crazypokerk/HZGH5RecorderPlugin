@@ -21,7 +21,7 @@ namespace HZGH5Recorder
         [OrderWeight(999)]
         [ResultToProperty]
         [DisplayName("命令执行结果信息保存至变量")]
-        public string OutParameterName { get; set; }
+        public string OutParameterInfo { get; set; }
 
         [OrderWeight(1000)]
         [ResultToProperty]

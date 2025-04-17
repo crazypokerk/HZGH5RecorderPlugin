@@ -63,88 +63,129 @@
          * Stop   5
          */
         let saveDataInIndexedDBKeyID;
-        switch (operationCode) {
-            // open
-            case 0:
-                this.rec = this.#recorderInstance(this.recordOutputType);
-                if (this.isVisibleWaveView) {
-                    this.waveInstance = new WaveViewInstance(180, 60);
+        let operationReturnCode, operationReturnMsg;
+        const handleOperation = async (operationCode) => {
+            const setReturn = (success, msg) => {
+                operationReturnCode = success ? 0 : -1;
+                operationReturnMsg = {
+                    success,
+                    msg
                 }
-                this.rec.open(() => {
-                    console.info(`INFO: 已打开录音，可以点击录制开始录音了`);
+            }
 
-                }, function (msg, isUserNotAllow) {
-                    console.error(`(${isUserNotAllow} ? "UserNotAllow," : "") 用户拒绝打开录音权限，打开录音失败,${msg}`);
-                });
-                break;
-            // close
-            case 1:
-                if (this.rec) {
-                    this.rec.close();
-                    // 当关闭录音后，需要释放资源，清除挂在window对象上的frobj对象
-                    window.frobj = null;
-                    console.info(`INFO: 已关闭录音，释放资源`);
-                } else {
-                    console.warn(`WARN: 未打开录音权限，请先打开录音权限`);
+            const validateRecorder = () => {
+                if (!this.rec || !Recorder.IsOpen()) {
+                    setReturn(false, "未打开录音");
+                    return false;
                 }
-                break;
-            // start
-            case 2:
-                if (this.rec && Recorder.IsOpen()) {
-                    this.recBlob = null;
-                    this.rec.start();
-                    console.info(`INFO: 已开始录音，正在录音中...`);
-                }
-                break;
-            // pause
-            case 3:
-                if (this.rec && Recorder.IsOpen()) {
-                    this.rec.pause();
-                    console.info(`INFO: 录音已暂停`);
-                } else {
-                    console.info(`INFO: 未打开录音`);
-                }
-                break;
-            // resume
-            case 4:
-                if (this.rec && Recorder.IsOpen()) {
-                    this.rec.resume();
-                    console.info(`INFO: 继续录音中...`);
-                } else {
-                    console.info(`INFO: 未打开录音`);
-                }
-                break;
-            // stop
-            case 5:
-                try {
-                    if (!(this.rec && Recorder.IsOpen())) {
-                        console.info(`INFO: 未打开录音`);
-                        return;
-                    }
-                    this.rec.stop(async (blob, duration, mine) => {
-                        console.log(blob, (window.URL || webkitURL).createObjectURL(blob));
-                        let opdb = new IndexedDBInstance('hzg-rc-1', 1);
-                        await opdb.initLocalForage();
-                        if (!opdb.DBStatus) {
-                            console.error('IndexedDB初始化异常！');
+                return true;
+            }
+
+            try {
+                switch (operationCode) {
+                    // open
+                    case 0:
+                        this.rec = this.#recorderInstance(this.recordOutputType);
+                        if (this.isVisibleWaveView) {
+                            this.waveInstance = new WaveViewInstance(180, 60);
                         }
-                        let keyId = opdb.setItemInDB('record', blob).then((result) => {
-                            console.log('Save record success!');
+
+                        await this.rec.open(() => {
+                            setReturn(true, "打开录音成功")
+                        }, (msg, isUserNotAllow) => {
+                            setReturn(false, isUserNotAllow ? "用户拒绝打开录音权限，打开录音失败" : `打开录音失败: ${msg}`);
                         });
-                        saveDataInIndexedDBKeyID = keyId;
-                        this.recBlob = blob;
-                        console.warn(`INFO: 已录制mp3：${this.#formatMs(duration)}ms, ${blob.size}字节`);
-                    }, function (msg) {
-                        console.error(`${msg},录音失败`);
-                    }, true);
-                } catch (e) {
-                    throw new Error('Save data error...')
+                        break;
+                    // close
+                    case 1:
+                        if (!validateRecorder()) return;
+
+                        try {
+                            this.rec.close();
+                            setReturn(true, "已关闭录音，释放资源");
+                            window.frobj = null; // 清理全局对象
+                        } catch (e) {
+                            setReturn(false, `录音关闭失败: ${e.message}`);
+                        }
+                        break;
+                    // start
+                    case 2:
+                        if (!validateRecorder()) return;
+
+                        try {
+                            this.recBlob = null;
+                            this.rec.start();
+                            setReturn(true, "已开始录音，正在录音中");
+                        } catch (e) {
+                            setReturn(false, `录音启动失败: ${e.message}`);
+                        }
+                        break;
+                    // pause
+                    case 3:
+                        if (!validateRecorder()) return;
+                        try {
+                            this.rec.pause();
+                            setReturn(true, "录音已暂停");
+                        } catch (e) {
+                            setReturn(false, `录音暂停失败: ${e.message}`);
+                        }
+                        break;
+                    // resume
+                    case 4:
+                        if (!validateRecorder()) return;
+                        try {
+                            this.rec.resume();
+                            setReturn(true, "录音已恢复");
+                        } catch (e) {
+                            setReturn(false, `录音恢复失败: ${e.message}`);
+                        }
+                        break;
+                    // stop
+                    case 5:
+                        if (!validateRecorder()) return;
+
+                        try {
+                            this.rec.stop(async (blob, duration) => {
+                                console.log(blob, (window.URL || webkitURL).createObjectURL(blob));
+
+                                try {
+                                    const opdb = new IndexedDBInstance('hzg-rc-1', 1);
+                                    await opdb.initLocalForage();
+
+                                    if (!opdb.DBStatus) {
+                                        setReturn(false, "IndexedDB初始化失败");
+                                    }
+
+                                    const keyId = opdb.setItemInDB('record', blob);
+                                    saveDataInIndexedDBKeyID = keyId;
+                                    this.recBlob = blob;
+
+                                    setReturn(true, `已录制mp3：${this.#formatMs(duration)}ms, ${blob.size}字节`);
+                                } catch (e) {
+                                    setReturn(false, `数据保存失败: ${e.message}`);
+                                }
+                            }, (msg) => {
+                                setReturn(false, `录音停止失败: ${msg}`);
+                            }, true);
+                        } catch (e) {
+                            setReturn(false, `录音停止异常: ${e.message}`);
+                        }
+                        break;
+                    default:
+                        setReturn(false, "操作码错误");
                 }
-                break;
-            default:
-                throw new Error('选择类型错误');
+            } catch (e) {
+                setReturn(false, `操作执行异常: ${e.message}`);
+            }
         }
-        return saveDataInIndexedDBKeyID;
+
+        await handleOperation(operationCode);
+
+        return {
+            saveDataInIndexedDBKeyID,
+            operationReturnCode,
+            operationReturnMsg
+        }
     }
 
     // 测试用，前端实时语音识别
@@ -192,7 +233,7 @@
             localStorage.setItem('resultTextTemp', this.iatWSObj.resultTextTemp);
             this.rec.stop(async (blob, duration, mine) => {
                 // 关闭ws定时器
-                this.iatWSObj.clearCountdown();
+                // this.iatWSObj.clearCountdown();
                 console.log(blob, (window.URL || webkitURL).createObjectURL(blob));
                 this.recBlob = blob;
                 console.warn(`INFO: 已录制mp3：${this.#formatMs(duration)}ms, ${blob.size}字节`);
@@ -204,7 +245,7 @@
             throw new Error('Save data error...')
         } finally {
             window.frobj = null;
-            this.iatWSObj.iatWS.close();
+            // this.iatWSObj.iatWS.close();
         }
     }
 
