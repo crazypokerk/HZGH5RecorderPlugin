@@ -13,6 +13,9 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
         const isVisibleDownloadButton = this.CellElement.CellType.IsVisibleDownloadButton;
 
         const isOpenRealtimeIAT = this.CellElement.CellType.IsOpenRealtimeIAT;
+        const appid = this.evaluateFormula(this.CellElement.CellType.APPID);
+        const apiKey = this.evaluateFormula(this.CellElement.CellType.APIKey);
+        const apiSecret = this.evaluateFormula(this.CellElement.CellType.APISecret);
 
         // 目的是为了存入waveview是否显示，如果不显示，则命令插件在open时不会创建waveview
         localStorage.setItem("isVisibleWaveView", isVisibleWaveView);
@@ -77,11 +80,11 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
             type: 'button'
         });
         if (isOpenRealtimeIAT) {
-            this.#createForguncyRecorderInstance();
+            this.#createForguncyRecorderInstance(appid, apiKey, apiSecret);
             $actionButton.on("click", (e) => {
                 if ($actionButton.text() === '开始') {
                     if (window.frobj == null) {
-                        this.#createForguncyRecorderInstance();
+                        this.#createForguncyRecorderInstance(appid, apiKey, apiSecret);
                     }
                     e.preventDefault();// 阻止默认滚动行为
                     this.startAction();
@@ -150,8 +153,13 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
         return $container;
     }
 
-    #createForguncyRecorderInstance() {
-        let frobj = new ForguncyRecorder("unknown", 16000, 16, true, 1280, true);
+    #createForguncyRecorderInstance(appid, apiKey, apiSecret) {
+        const iatConfig = {
+            APPID: appid,
+            APIKey: apiKey,
+            APISecret: apiSecret
+        }
+        let frobj = new ForguncyRecorder("unknown", 16000, 16, true, 1280, true, iatConfig);
         window.frobj = frobj;
     }
 
@@ -174,7 +182,7 @@ class HZGH5RecorderCellType extends Forguncy.Plugin.CellTypeBase {
         window.uploadUrl = uploadUrl;
         window.uploadType = uploadType;
     }
-    
+
     #recordUpload(uploadType, uploadUrl) {
         switch (uploadType) {
             case "Base64":

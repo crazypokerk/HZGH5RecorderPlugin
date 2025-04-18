@@ -63,8 +63,26 @@ namespace HZGH5Recorder
 
         [OrderWeight(500)]
         [DisplayName("是否启用测试语言识别模式")]
+        [Description(
+            "此功能仅用于测试功能，不建议在正式环境中使用。对接的是科大讯飞的实时语音识别服务，需要申请APPID、APIKey、APISecret等参数。如果直接使用，有泄露appid、apikey、apisecret等风险。")]
         [DefaultValue(false)]
         public bool IsOpenRealtimeIAT { get; set; } = false;
+
+        [OrderWeight(888)] [FormulaProperty] public object APPID { get; set; }
+
+        [OrderWeight(889)] [FormulaProperty] public object APIKey { get; set; }
+
+        [OrderWeight(890)] [FormulaProperty] public object APISecret { get; set; }
+
+        public override bool GetDesignerPropertyVisible(string propertyName)
+        {
+            if (propertyName == nameof(APPID) || propertyName == nameof(APIKey) || propertyName == nameof(APISecret))
+            {
+                return IsOpenRealtimeIAT;
+            }
+
+            return base.GetDesignerPropertyVisible(propertyName);
+        }
 
         public override string ToString()
         {

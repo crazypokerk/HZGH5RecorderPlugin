@@ -1,4 +1,12 @@
-﻿class ForguncyRecorder {
+﻿const RecorderState = {
+    CLOSED: Symbol('CLOSED'),
+    OPENED: Symbol('OPENED'),
+    RECORDING: Symbol('RECORDING'),
+    PAUSED: Symbol('PAUSED'),
+    ERROR: Symbol("ERROR")
+};
+
+class ForguncyRecorder {
     rec;
     recBlob;
     recordOutputType;
@@ -14,19 +22,34 @@
     send_logNumber = 0;
     iatWSObj;
     isOpenRealtimeIAT;
+    currentState;
+    iAtConfig;
 
-    constructor(recordOutputType, sampleRate, bitRate, isVisibleWaveView, sendFrameSize = 0, isOpenRealtimeIAT = false) {
+    constructor(recordOutputType, sampleRate, bitRate, isVisibleWaveView, sendFrameSize = 0, isOpenRealtimeIAT = false, IATWSObj = null) {
         this.recordOutputType = recordOutputType;
         this.sampleRate = sampleRate;
         this.bitRate = bitRate;
         this.isVisibleWaveView = isVisibleWaveView;
         this.sendFrameSize = sendFrameSize;
         this.isOpenRealtimeIAT = isOpenRealtimeIAT;
+        this.currentState = RecorderState.CLOSED;
+        this.iAtConfig = IATWSObj;
+    }
+
+    #transition(newState) {
+        console.debug(`State change: ${this.currentState.description} -> ${newState.description}`);
+        this.currentState = newState;
+    }
+
+    #assertState(expectedStates, operation) {
+        if (!expectedStates.includes(this.currentState)) {
+            throw new Error(`State change:: ${operation}，current state is ${this.currentState.description}`);
+        }
     }
 
     #recorderInstance(type) {
         if (this.bitRate !== 16 && this.sendFrameSize % 2 === 1) {
-            throw new Error('sendFrameSize必须为偶数！');
+            throw new Error('Send Frame Size must be even number!');
         }
         let clearBufferIdx = 0;
         let newRecorder = Recorder({
@@ -62,6 +85,7 @@
          * Resume 4
          * Stop   5
          */
+
         let saveDataInIndexedDBKeyID;
         let operationReturnCode, operationReturnMsg;
         const handleOperation = async (operationCode) => {
@@ -75,7 +99,7 @@
 
             const validateRecorder = () => {
                 if (!this.rec || !Recorder.IsOpen()) {
-                    setReturn(false, "未打开录音");
+                    setReturn(false, "Recording not turned on.");
                     return false;
                 }
                 return true;
@@ -85,97 +109,119 @@
                 switch (operationCode) {
                     // open
                     case 0:
+                        this.#assertState([RecorderState.CLOSED, RecorderState.ERROR], "open");
                         this.rec = this.#recorderInstance(this.recordOutputType);
                         if (this.isVisibleWaveView) {
                             this.waveInstance = new WaveViewInstance(180, 60);
                         }
 
-                        await this.rec.open(() => {
-                            setReturn(true, "打开录音成功")
-                        }, (msg, isUserNotAllow) => {
-                            setReturn(false, isUserNotAllow ? "用户拒绝打开录音权限，打开录音失败" : `打开录音失败: ${msg}`);
+                        await new Promise((resolve, reject) => {
+                            this.rec.open(
+                                () => {
+                                    this.#transition(RecorderState.OPENED);
+                                    setReturn(true, "Recording opened successfully.")
+                                    resolve();
+                                },
+                                (msg, isUserNotAllow) => {
+                                    this.#transition(RecorderState.ERROR);
+                                    setReturn(false, isUserNotAllow ? "User denied permission to open the recording, opening the recording failed." : `Failed: ${msg}`);
+                                    reject();
+                                }
+                            );
                         });
                         break;
                     // close
                     case 1:
                         if (!validateRecorder()) return;
-
+                        this.#assertState([RecorderState.OPENED, RecorderState.ERROR], "close");
                         try {
                             this.rec.close();
-                            setReturn(true, "已关闭录音，释放资源");
+                            this.#transition(RecorderState.CLOSED);
+                            setReturn(true, "The recording has been closed and the resources have been released.");
                             window.frobj = null; // 清理全局对象
                         } catch (e) {
-                            setReturn(false, `录音关闭失败: ${e.message}`);
+                            this.#transition(RecorderState.ERROR);
+                            setReturn(false, `Failed to close the recording: ${e.message}`);
                         }
                         break;
                     // start
                     case 2:
+                        this.#assertState([RecorderState.OPENED, RecorderState.PAUSED], "start");
                         if (!validateRecorder()) return;
-
                         try {
                             this.recBlob = null;
                             this.rec.start();
-                            setReturn(true, "已开始录音，正在录音中");
+                            this.#transition(RecorderState.RECORDING);
+                            setReturn(true, "Started recording; currently recording...");
                         } catch (e) {
-                            setReturn(false, `录音启动失败: ${e.message}`);
+                            this.#transition(RecorderState.ERROR);
+                            setReturn(false, `Failed to start the recording: ${e.message}`);
                         }
                         break;
                     // pause
                     case 3:
                         if (!validateRecorder()) return;
+                        this.#assertState([RecorderState.RECORDING], "pause");
                         try {
                             this.rec.pause();
-                            setReturn(true, "录音已暂停");
+                            this.#transition(RecorderState.PAUSED);
+                            setReturn(true, "Recording has been paused.");
                         } catch (e) {
-                            setReturn(false, `录音暂停失败: ${e.message}`);
+                            this.#transition(RecorderState.ERROR);
+                            setReturn(false, `Failed to pause the recording: ${e.message}`);
                         }
                         break;
                     // resume
                     case 4:
                         if (!validateRecorder()) return;
+                        this.#assertState([RecorderState.PAUSED], "resume");
                         try {
                             this.rec.resume();
-                            setReturn(true, "录音已恢复");
+                            this.#transition(RecorderState.RECORDING);
+                            setReturn(true, "Recording has resumed.");
                         } catch (e) {
-                            setReturn(false, `录音恢复失败: ${e.message}`);
+                            this.#transition(RecorderState.ERROR);
+                            setReturn(false, `Failed to resume the recording: ${e.message}`);
                         }
                         break;
                     // stop
                     case 5:
                         if (!validateRecorder()) return;
-
-                        try {
+                        this.#assertState([RecorderState.RECORDING, RecorderState.PAUSED], "stop");
+                        await new Promise((resolve, reject) => {
                             this.rec.stop(async (blob, duration) => {
-                                console.log(blob, (window.URL || webkitURL).createObjectURL(blob));
-
                                 try {
                                     const opdb = new IndexedDBInstance('hzg-rc-1', 1);
                                     await opdb.initLocalForage();
 
                                     if (!opdb.DBStatus) {
-                                        setReturn(false, "IndexedDB初始化失败");
+                                        setReturn(false, "IndexedDB init failed.");
                                     }
 
                                     const keyId = opdb.setItemInDB('record', blob);
                                     saveDataInIndexedDBKeyID = keyId;
                                     this.recBlob = blob;
-
-                                    setReturn(true, `已录制mp3：${this.#formatMs(duration)}ms, ${blob.size}字节`);
+                                    this.#transition(RecorderState.CLOSED);
+                                    setReturn(true, `mp3：${this.#formatMs(duration)}ms, ${blob.size} bytes`);
+                                    resolve();
                                 } catch (e) {
-                                    setReturn(false, `数据保存失败: ${e.message}`);
+                                    this.#transition(RecorderState.ERROR);
+                                    setReturn(false, `Failed to save the recording data: ${e.message}`);
+                                    reject(e);
                                 }
                             }, (msg) => {
-                                setReturn(false, `录音停止失败: ${msg}`);
+                                setReturn(false, `Failed to stop the recording: ${msg}`);
+                                this.#transition(RecorderState.ERROR);
                             }, true);
-                        } catch (e) {
-                            setReturn(false, `录音停止异常: ${e.message}`);
-                        }
+                        });
                         break;
                     default:
-                        setReturn(false, "操作码错误");
+                        this.#transition(RecorderState.ERROR);
+                        setReturn(false, "unsupported operation");
                 }
             } catch (e) {
-                setReturn(false, `操作执行异常: ${e.message}`);
+                this.#transition(RecorderState.ERROR);
+                setReturn(false, `Error: ${e.message}`);
             }
         }
 
@@ -194,14 +240,17 @@
             window.frobj.rec = null;
         }
         this.rec = this.#recorderInstance(this.recordOutputType);
+        if (this.IATWSObj) {
+            throw new Error("App config is null, please check it.");
+        }
         // 创建好录音对象同时，初始化iatWS对象
-        this.iatWSObj = new IATwsInstance('7300d69c', '7f006057e1511f8b8f0b5ec3598c0aee', 'Y2ViMTAzNmI4YjIzMDA4MzVjMjBmYzFl');
+        this.iatWSObj = new IATwsInstance(this.iAtConfig.APPID, this.iAtConfig.APIKey, this.iAtConfig.APISecret);
+
         if (this.isVisibleWaveView) {
             this.waveInstance = new WaveViewInstance(180, 60);
         }
         new Promise((resolve, reject) => {
             this.rec.open(() => {
-                console.info(`INFO: 已打开录音，可以点击录制开始录音了`);
                 resolve();
             }, function (msg, isUserNotAllow) {
                 console.error(`(${isUserNotAllow} ? "UserNotAllow," : "") 用户拒绝打开录音权限，打开录音失败,${msg}`);
@@ -218,8 +267,7 @@
             try {
                 this.iatWSObj.connectWebSocket();
             } catch (e) {
-                console.error('WebSocket连接异常！');
-                throw new Error('WebSocket连接异常！');
+                throw new Error('WebSocket connection error!');
             }
         });
     }

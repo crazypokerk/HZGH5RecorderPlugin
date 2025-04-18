@@ -57,14 +57,14 @@ class IATwsInstance {
         if (status === "CONNECTING") {
             this.resultText = "";
             this.resultTextTemp = "";
-            console.log("------WebSocket正在连接------")
+            console.debug("------WebSocket正在连接------")
         } else if (status === "OPEN") {
             // this.#countdown();
-            console.log("------WebSocket连接成功------")
+            console.debug("------WebSocket连接成功------")
         } else if (status === "CLOSING") {
-            console.log("------WebSocket正在关闭------")
+            console.debug("------WebSocket正在关闭------")
         } else if (status === "CLOSED") {
-            console.log("------WebSocket连接已关闭------")
+            console.debug("------WebSocket连接已关闭------")
         }
     }
 
@@ -90,7 +90,7 @@ class IATwsInstance {
                     app_id: this.APPID,
                 },
                 business: {
-                    language: "en_us",
+                    language: "zh_cn",
                     domain: "iat",
                     accent: "mandarin",
                     vad_eos: 10000,
@@ -160,10 +160,10 @@ class IATwsInstance {
                     textarea = document.querySelector('.ant-sender-input');
                 }
                 textarea.value = this.resultTextTemp;
-                console.warn(`resultTextTemp------${this.resultTextTemp}`)
+                console.debug(`resultTextTemp------${this.resultTextTemp}`)
             } else {
                 this.resultText = this.resultText + str;
-                console.warn(`resultText------${this.resultText}`)
+                console.debug(`resultText------${this.resultText}`)
             }
         }
         if (jsonData.code === 0 && jsonData.data.status === 2) {

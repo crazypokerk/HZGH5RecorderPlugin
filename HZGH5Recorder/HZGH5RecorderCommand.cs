@@ -88,12 +88,12 @@ namespace HZGH5Recorder
 
         public enum SupportedOperations
         {
-            [Description("请求录音")] Open,
-            [Description("关闭录音")] Close,
-            [Description("开始录音")] Start,
-            [Description("暂停录音")] Pause,
-            [Description("恢复录音")] Resume,
-            [Description("结束录音")] Stop
+            [Description("请求录音[open]")] Open,
+            [Description("关闭录音[close]")] Close,
+            [Description("开始录音[start]")] Start,
+            [Description("暂停录音[pause]")] Pause,
+            [Description("恢复录音[resume]")] Resume,
+            [Description("结束录音[stop]")] Stop
         }
     }
 }
